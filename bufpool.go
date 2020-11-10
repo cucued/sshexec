@@ -10,7 +10,7 @@ var bufpool *sync.Pool
 func init() {
 	bufpool = &sync.Pool{}
 	bufpool.New = func() interface{} {
-		return make([]byte, 32 * 1024)
+		return make([]byte, 32*1024)
 	}
 }
 

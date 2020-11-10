@@ -1,13 +1,14 @@
 package sshexec
 
 import (
-	"time"
+	"errors"
 	"io/ioutil"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"os"
+	"time"
+
 	"github.com/linclin/grpool"
-	"errors"
+	"golang.org/x/crypto/ssh"
 )
 
 //
@@ -47,14 +48,14 @@ func GetAuthKeys(keys []string) []ssh.AuthMethod {
 	return methods
 }
 func (s *SSHExecAgent) SshHostByKey(hosts []string, port int, user string, cmd string) ([]ExecResult, error) {
-	if (len(hosts) == 0) {
+	if len(hosts) == 0 {
 		log.Println("no hosts")
 		return nil, errors.New("no hosts")
 	}
-	if (s.Worker == 0) {
+	if s.Worker == 0 {
 		s.Worker = 40
 	}
-	if (s.TimeOut == 0) {
+	if s.TimeOut == 0 {
 		s.TimeOut = 3600 * time.Second
 	}
 	keys := []string{
@@ -79,7 +80,7 @@ func (s *SSHExecAgent) SshHostByKey(hosts []string, port int, user string, cmd s
 					Password: "",
 					Hostname: hosts[count],
 					Port:     port,
-					Auths:  authKeys,
+					Auths:    authKeys,
 				}
 				r := session.Exec(count, cmd, session.GenerateConfig())
 				return *r, nil
@@ -92,21 +93,21 @@ func (s *SSHExecAgent) SshHostByKey(hosts []string, port int, user string, cmd s
 	errorText := ""
 	for res := range pool.Jobresult {
 		jobId, _ := res.Jobid.(int)
-		if (res.Timedout) {
+		if res.Timedout {
 			returnResult[jobId].Id = jobId
 			returnResult[jobId].Host = hosts[jobId]
 			returnResult[jobId].Command = cmd
 			returnResult[jobId].Error = errors.New("ssh time out")
-			errorText += "the host " + hosts[jobId] + " commond  exec time out."
+			errorText += "the host " + hosts[jobId] + " command exec time out."
 		} else {
 			execResult, _ := res.Result.(ExecResult)
 			returnResult[jobId] = execResult
-			if (execResult.Error != nil) {
-				errorText += "the host " + execResult.Host + " commond  exec error.\n" + "rsult info :" + execResult.Result + ".\nerror info :" + execResult.Error.Error()
+			if execResult.Error != nil {
+				errorText += "the host " + execResult.Host + " command exec error.\n" + "result info :" + execResult.Result + ".\nerror info :" + execResult.Error.Error()
 			}
 		}
 	}
-	if (errorText != "") {
+	if errorText != "" {
 		return returnResult, errors.New(errorText)
 
 	} else {
@@ -115,15 +116,15 @@ func (s *SSHExecAgent) SshHostByKey(hosts []string, port int, user string, cmd s
 
 }
 
-func (s *SSHExecAgent) SftpHostByKey(hosts []string, port int, user string, localFilePath  string, remoteFilePath string) ([]ExecResult, error) {
-	if (len(hosts) == 0) {
+func (s *SSHExecAgent) SftpHostByKey(hosts []string, port int, user string, localFilePath string, remoteFilePath string) ([]ExecResult, error) {
+	if len(hosts) == 0 {
 		log.Println("no hosts")
 		return nil, errors.New("no hosts")
 	}
-	if (s.Worker == 0) {
+	if s.Worker == 0 {
 		s.Worker = 40
 	}
-	if (s.TimeOut == 0) {
+	if s.TimeOut == 0 {
 		s.TimeOut = 3600 * time.Second
 	}
 	keys := []string{
@@ -148,7 +149,7 @@ func (s *SSHExecAgent) SftpHostByKey(hosts []string, port int, user string, loca
 					Password: "",
 					Hostname: hosts[count],
 					Port:     port,
-					Auths:  authKeys,
+					Auths:    authKeys,
 				}
 				r := session.Transfer(count, localFilePath, remoteFilePath, session.GenerateConfig())
 				return *r, nil
@@ -161,22 +162,22 @@ func (s *SSHExecAgent) SftpHostByKey(hosts []string, port int, user string, loca
 	errorText := ""
 	for res := range pool.Jobresult {
 		jobId, _ := res.Jobid.(int)
-		if (res.Timedout) {
+		if res.Timedout {
 			returnResult[jobId].Id = jobId
 			returnResult[jobId].Host = hosts[jobId]
 			returnResult[jobId].LocalFilePath = localFilePath
 			returnResult[jobId].RemoteFilePath = remoteFilePath
 			returnResult[jobId].Error = errors.New("ssh time out")
-			errorText += "the host " + hosts[jobId] + " commond  exec time out."
+			errorText += "the host " + hosts[jobId] + " command exec time out."
 		} else {
 			execResult, _ := res.Result.(ExecResult)
 			returnResult[jobId] = execResult
-			if (execResult.Error != nil) {
-				errorText += "the host " + execResult.Host + " commond  exec error.\n" + "rsult info :" + execResult.Result + ".\nerror info :" + execResult.Error.Error()
+			if execResult.Error != nil {
+				errorText += "the host " + execResult.Host + " command exec error.\n" + "result info :" + execResult.Result + ".\nerror info :" + execResult.Error.Error()
 			}
 		}
 	}
-	if (errorText != "") {
+	if errorText != "" {
 		return returnResult, errors.New(errorText)
 
 	} else {
