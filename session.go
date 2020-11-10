@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 )
 
 // ssh session
@@ -49,23 +50,20 @@ func (exec *HostSession) Exec(id int, command string, config ssh.ClientConfig) *
 	}
 
 	client, err := ssh.Dial("tcp", exec.Hostname+":"+strconv.Itoa(exec.Port), &config)
-
 	if err != nil {
 		result.Error = err
 		return result
 	}
+	defer client.Close()
 
 	session, err := client.NewSession()
-
 	if err != nil {
 		result.Error = err
 		return result
 	}
-
 	defer session.Close()
 
 	var b bytes.Buffer
-
 	session.Stdout = &b
 	var b1 bytes.Buffer
 	session.Stderr = &b1
@@ -94,21 +92,21 @@ func (exec *HostSession) Transfer(id int, localFilePath string, remoteFilePath s
 	}
 	start := time.Now()
 	result.StartTime = start
-	client, err := ssh.Dial("tcp", exec.Hostname+":"+strconv.Itoa(exec.Port), &config)
 
+	client, err := ssh.Dial("tcp", exec.Hostname+":"+strconv.Itoa(exec.Port), &config)
 	if err != nil {
 		result.Error = err
 		return result
 	}
+	defer client.Close()
 
 	session, err := client.NewSession()
-
 	if err != nil {
 		result.Error = err
 		return result
 	}
-
 	defer session.Close()
+
 	var fileSize int64
 	if s, err := os.Stat(localFilePath); err != nil {
 		result.Error = err
@@ -171,8 +169,8 @@ func (exec *HostSession) GenerateConfig() ssh.ClientConfig {
 	}
 
 	config := ssh.ClientConfig{
-		User: exec.Username,
-		Auth: auths,
+		User:            exec.Username,
+		Auth:            auths,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
